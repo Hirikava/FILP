@@ -124,7 +124,7 @@ int main(int argc, char* argv[])
 	split_book(words_str, buffer, buffer + size);
 
 	std::cout << "Dummy Page Allocator and cahr*" << std::endl;
-	allocator_benchmark<DummyPageAllocator,char*,CStyleStringComparator>(words);
+	allocator_benchmark<allocators::DummyPageAllocator,char*,CStyleStringComparator>(words);
 
 	std::cout << std::endl;
 	std::cout << "std::allocator and std::string" << std::endl;
