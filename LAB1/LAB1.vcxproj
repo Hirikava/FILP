@@ -146,6 +146,9 @@
     <Text Include="book.txt" />
     <Text Include="words.txt" />
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="dummy_page_allocator.hpp" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
