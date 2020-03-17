@@ -53,12 +53,9 @@ public:
 			current->page_offset += entity_size * n;
 			return ret_pointer;
 		}
-		else
-		{
-			current->next = new Page(1048576);
-			current = current->next;
-			return this->allocate(n, hint);
-		}
+		current->next = new Page(1048576);
+		current = current->next;
+		return this->allocate(n, hint);
 	}
 
 	void deallocate(pointer ptr, size_t n)
@@ -91,17 +88,17 @@ private:
  };
 
 
-template<template<typename> class AllocatorType>
-void allocator_benchmark(std::vector<char*>& words)
+template<template<typename> class AllocatorType,typename ValueType, typename Comparator>
+void allocator_benchmark(std::vector<ValueType>& words)
 {
-	std::map<char*, int, CStyleStringComparator,AllocatorType<std::pair<char*,int>>> map;
+	std::map<ValueType, int, Comparator,AllocatorType<std::pair<ValueType,int>>> map;
 	auto start =std::chrono::high_resolution_clock::now();
 	for (auto word : words)
 	{
 		auto iter = map.find(word);
 		if (iter == map.end())
 		{
-			map.insert(std::pair<char*, int>(word, 1));
+			map.insert(std::pair<ValueType, int>(word, 1));
 		}
 		else
 			iter->second++;
@@ -134,7 +131,8 @@ char* ReadFile(const char* filename,unsigned int& buffer_size)
 	return fileBuffer;
 }
 
-void split_book(std::vector<char*>& store,char* beggin, char* end)
+template<typename ValueType>
+void split_book(std::vector<ValueType>& store,char* beggin, char* end)
 {
 	char* word_start = beggin;
 	size_t word_size = 0;
@@ -151,8 +149,8 @@ void split_book(std::vector<char*>& store,char* beggin, char* end)
 			}
 			else
 			{
-				store.push_back(word_start);
 				word_start[word_size] = '\0';
+				store.push_back(ValueType(word_start));
 				word_start = word_start + word_size;
 				word_start++;
 				word_size = 0;
@@ -166,22 +164,32 @@ void split_book(std::vector<char*>& store,char* beggin, char* end)
 }
 
 
+class StringCompare
+{
+public:
+	bool operator()(const std::string s1,const std::string s2) const
+	{
+		return s1 < s2;
+	}
+};
+
 int main(int argc, char* argv[])
 {
 	std::vector<char*> words;
+	std::vector<std::string> words_str;
+	
 	unsigned int size;
 	char* buffer = ReadFile("words.txt",size);
 
 	split_book(words, buffer, buffer + size);
+	split_book(words_str, buffer, buffer + size);
 
-	std::cout << "Dummy Page Allocator" << std::endl;
-	allocator_benchmark<DummyPageAllocator>(words);
-
-
+	std::cout << "Dummy Page Allocator and cahr*" << std::endl;
+	allocator_benchmark<DummyPageAllocator,char*,CStyleStringComparator>(words);
 
 	std::cout << std::endl;
-	std::cout << "std::allocator" << std::endl;
-	allocator_benchmark<std::allocator>(words);
+	std::cout << "std::allocator and std::string" << std::endl;
+	allocator_benchmark<std::allocator,std::string,StringCompare>(words_str);
 
 	delete [] buffer;
 	return 0;
